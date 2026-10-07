@@ -1,0 +1,24 @@
+Package: xppen-uclogic
+Version: 1.0
+Section: admin
+Priority: optional
+Architecture: all
+Maintainer: anindra <anindra@localhost>
+Depends: kmod
+Conflicts: xppenlinux, opentabletdriver
+Description: Enable kernel hid_uclogic driver for XP-Pen / UC-Logic drawing tablets
+ Many XP-Pen, UGEE, Huion, Artisul and VEIKK drawing tablets are supported by
+ the in-kernel hid_uclogic driver. However some vendors' userspace drivers and
+ OpenTabletDriver blacklist hid_uclogic, which leaves the tablet bound to the
+ generic hid-generic driver. In that state the pen produces no events, so the
+ cursor does not move and there is no pressure under Wayland.
+ .
+ This package:
+  * ensures the hid_uclogic module is loaded at boot and immediately, and
+  * removes any "blacklist hid_uclogic" entry,
+ so the tablet is exposed as a real graphics tablet to libinput/KWin and works
+ under a Wayland session with pressure, tilt, buttons and eraser.
+ .
+ Tested with an XP-Pen Deco 01 V2 (28bd:0905) on KDE Plasma 6 (Wayland).
+ Note: this package intentionally Conflicts with xppenlinux (X11-only vendor
+ driver) and opentabletdriver (which blacklists hid_uclogic).

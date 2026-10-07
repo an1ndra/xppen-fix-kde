@@ -1,0 +1,31 @@
+#!/bin/sh
+set -e
+
+# 1) Remove any "blacklist hid_uclogic" entry so the module can load.
+for f in /etc/modprobe.d/*.conf /usr/lib/modprobe.d/*.conf /lib/modprobe.d/*.conf; do
+    [ -f "$f" ] || continue
+    if grep -qE '^[[:space:]]*blacklist[[:space:]]+hid_uclogic([[:space:]]|$)' "$f" 2>/dev/null; then
+        sed -i -E 's|^([[:space:]]*blacklist[[:space:]]+hid_uclogic.*)$|# disabled by xppen-uclogic: \1|' "$f" || true
+    fi
+done
+
+# 2) Load the module now. The HID core will rebind the tablet to hid_uclogic.
+if command -v modprobe >/dev/null 2>&1; then
+    modprobe hid_uclogic 2>/dev/null || true
+fi
+
+# 3) Nudge udev/libinput so the new pen device is picked up immediately.
+if command -v udevadm >/dev/null 2>&1; then
+    udevadm control --reload-rules 2>/dev/null || true
+    udevadm trigger --action=add --subsystem-match=hid 2>/dev/null || true
+fi
+
+# 4) Friendly status message.
+if lsmod 2>/dev/null | grep -q '^hid_uclogic'; then
+    echo "xppen-uclogic: hid_uclogic loaded - your tablet should now work."
+else
+    echo "xppen-uclogic: WARNING - hid_uclogic did not load." >&2
+    echo "  Make sure the 'hid-uclogic' kernel module exists (linux-modules-extra)." >&2
+fi
+
+exit 0

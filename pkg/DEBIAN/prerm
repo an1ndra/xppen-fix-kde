@@ -1,0 +1,5 @@
+#!/bin/sh
+set -e
+# Leave hid_uclogic loaded on removal: unloading it would break the tablet
+# until the next replug/reboot, and other users may rely on it too.
+exit 0

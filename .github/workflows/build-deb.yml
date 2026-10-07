@@ -1,0 +1,46 @@
+name: build-deb
+
+on:
+  push:
+    branches: [ main ]
+    tags: [ 'v*' ]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-deb:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Build .deb
+        run: |
+          set -euo pipefail
+          VERSION=$(awk -F': ' '/^Version:/{print $2}' pkg/DEBIAN/control)
+          echo "Version: $VERSION"
+          chmod 0755 pkg/DEBIAN/postinst pkg/DEBIAN/prerm pkg/DEBIAN/postrm
+          mkdir -p dist
+          dpkg-deb --build --root-owner-group pkg "dist/xppen-uclogic_${VERSION}_all.deb"
+          echo "--- package info ---"
+          dpkg-deb -I "dist/xppen-uclogic_${VERSION}_all.deb"
+          echo "--- contents ---"
+          dpkg-deb -c "dist/xppen-uclogic_${VERSION}_all.deb"
+          echo "--- sha256 ---"
+          sha256sum dist/*.deb
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: xppen-uclogic-deb
+          path: dist/*.deb
+          if-no-files-found: error
+
+      - name: Create Release (on tag)
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist/*.deb
+          generate_release_notes: true

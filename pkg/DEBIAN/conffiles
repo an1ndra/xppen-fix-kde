@@ -1,0 +1,2 @@
+/etc/modules-load.d/hid-uclogic.conf
+/etc/modprobe.d/zzz-hid-uclogic.conf
